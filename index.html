@@ -387,9 +387,14 @@ function checkAnswer(timeOver){
     const q = questions[index];
     const val = parseInt(answer.value);
 
+    // ❌ noto‘g‘ri yoki vaqt tugadi
     if(timeOver || val !== q.ans){
         wrong++;
         wrongCountEl.textContent = wrong;
+
+        // 🔴 SAVOL JOYIGA TO‘G‘RI JAVOBNI YOZAMIZ
+        question.textContent = `${q.a} × ${q.b} = ${q.ans}`;
+
         wrongList.push(
             `${q.a} × ${q.b} = ${q.ans} (<span class="wrong-user">${isNaN(val)?"−":val}</span>)`
         );
@@ -397,15 +402,20 @@ function checkAnswer(timeOver){
         container.classList.add("wrong-flash");
         setTimeout(()=>container.classList.remove("wrong-flash"),300);
 
-        playSound(errSound); // ❌
-    } else {
+        playSound(errSound);
+    }
+    // ✅ to‘g‘ri
+    else{
         correct++;
         correctCountEl.textContent = correct;
+
+        // 🔵 SAVOL JOYIGA JAVOBNI YOZAMIZ
+        question.textContent = `${q.a} × ${q.b} = ${q.ans}`;
 
         container.classList.add("correct-flash");
         setTimeout(()=>container.classList.remove("correct-flash"),300);
 
-        playSound(okSound); // ✅
+        playSound(okSound);
     }
 
     index++;
