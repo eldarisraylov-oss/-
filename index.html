@@ -372,7 +372,7 @@ function startTimer(){
         timerEl.textContent = t;
         if(t <= 0){
             clearInterval(timer);
-            checkAnswer(true);
+            checkAnswer(false);
         }
     },1000);
 }
@@ -443,12 +443,23 @@ function backspace(){
 
 /* ================= KEYBOARD ================= */
 
-answer.addEventListener("keydown", e=>{
+answer.addEventListener("keydown", e => {
+
+    // ✅ ENTER — tekshirish (ovoz yo‘q)
     if(e.key === "Enter"){
         e.preventDefault();
         checkAnswer(false);
+        return;
+    }
+
+    // ✅ FAQAT 0–9 bosilganda click ovozi
+    if(e.key >= "0" && e.key <= "9"){
+        if(!checked){
+            playSound(clickSound);
+        }
     }
 });
+
 
 document.addEventListener("keydown", e=>{
     if(e.code === "Space" && game.style.display !== "none"){
