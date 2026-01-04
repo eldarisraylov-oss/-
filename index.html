@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Көбейту кестесі — Тест</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6fb;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    margin:0;
+}
+
+.container{
+    width:90%;
+    max-width:600px;
+    background:#fff;
+    padding:30px;
+    border-radius:16px;
+    box-shadow:0 0 25px rgba(0,0,0,.15);
+    text-align:center;
+    position:relative;
+}
+
+.scoreboard{
+    position:absolute;
+    right:20px;
+    top:20px;
+    text-align:right;
+}
+.scoreboard {
+    display: none;
+}
+#timer{
+    display: none;
+}
+
+.score{
+    font-size:18px;
+    font-weight:bold;
+}
+.correct{color:green;}
+.wrong{color:red;}
+
+.topbar{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:20px;
+}
+
+button{
+    background:#4a6cf7;
+    color:white;
+    padding:10px 18px;
+    font-size:16px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+}
+button:hover{background:#3452d1}
+
+#startBtn{
+    margin-top: 12px;   /* 🔹 tugmalar orasini ochadi */
+}
+
+#question{
+    font-size:36px;
+    font-weight:bold;
+    margin:20px 0;
+}
+
+input{
+    font-size:26px;
+    padding:10px;
+    width:200px;
+    text-align:center;
+}
+
+#timer{
+    font-size:22px;
+    color:red;
+    font-weight:bold;
+}
+
+/* === NUMPAD === */
+.numpad-wrap{
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+    gap:16px;
+    margin:20px 0;
+    transform:translateX(50px);
+}
+
+.numpad{
+    display:grid;
+    grid-template-columns:repeat(3,90px);
+    gap:15px;
+}
+
+.key{
+    width:90px;
+    height:80px;
+    font-size:28px;
+    font-weight:bold;
+    color:#333;                    /* 🔑 MUHIM */
+    border-radius:16px;
+    border:1.5px solid rgba(0,0,0,.35);
+    background:linear-gradient(145deg,#ffffff,#d9dce3);
+    box-shadow:6px 6px 12px #c5c8ce,
+               -6px -6px 12px #ffffff;
+    cursor:pointer;
+}
+
+.key:active{
+    box-shadow:inset 4px 4px 8px #c5c8ce,
+               inset -4px -4px 8px #ffffff;
+    transform:scale(.97);
+}
+
+.next-key{
+    width:90px;
+    height:80px;
+}
+
+.wrong-list{
+    margin:20px auto 0;   /* 🔑 markazga keltiradi */
+    text-align:center;      /* misollar chapdan o‘qiladi */
+    font-size:18px;
+    max-width:320px;      /* 🔑 chiroyli eni */
+}
+.wrong-user{
+    color:red;
+    font-weight:bold;
+}
+/* === MOBILE ADAPTATION === */
+@media (max-width: 480px){
+
+    .container{
+        padding:20px;
+    }
+
+    #question{
+        font-size:28px;
+    }
+
+    input{
+        width:160px;
+        font-size:22px;
+    }
+
+    .numpad-wrap{
+        transform:none;
+        gap:10px;
+    }
+
+    .numpad{
+        grid-template-columns:repeat(3,70px);
+        gap:10px;
+    }
+
+    .key{
+        width:70px;
+        height:60px;
+        font-size:22px;
+        border-radius:12px;
+    }
+
+    .next-key{
+        width:70px;
+        height:60px;
+    }
+}
+
+/* === FEEDBACK EFFECT === */
+.correct-flash{
+    animation: correctFlash 0.6s ease-in-out;
+}
+.wrong-flash{
+    animation: wrongFlash 0.6s ease-in-out;
+}
+
+@keyframes correctFlash{
+    from{ background:#e6ffea; }
+    to{ background:#ffffff; }
+}
+
+@keyframes wrongFlash{
+    from{ background:#ffe6e6; }
+    to{ background:#ffffff; }
+}
+
+</style>
+</head>
+
+<body>
+<div class="container">
+<h2>Көбейту кестесі — Тест</h2>
+
+<div class="topbar" id="topbar">
+    <button id="soundBtn" onclick="toggleSound()">🔊 Дыбыс: ON</button>
+    <div id="timer">5</div>
+</div>
+
+<button id="startBtn" onclick="startGame()">▶ Бастау</button>
+
+<div class="scoreboard">
+    <div class="score correct">✅ Дурыс: <span id="correctCount">0</span></div>
+    <div class="score wrong">❌ Қате: <span id="wrongCount">0</span></div>
+</div>
+
+<div id="game" style="display:none;">
+    <div id="question"></div>
+
+    <input id="answer" inputmode="numeric" placeholder="Жауап">
+
+    <div class="numpad-wrap">
+        <div class="numpad">
+            <button class="key" onclick="pressNum(7)">7</button>
+            <button class="key" onclick="pressNum(8)">8</button>
+            <button class="key" onclick="pressNum(9)">9</button>
+
+            <button class="key" onclick="pressNum(4)">4</button>
+            <button class="key" onclick="pressNum(5)">5</button>
+            <button class="key" onclick="pressNum(6)">6</button>
+
+            <button class="key" onclick="pressNum(1)">1</button>
+            <button class="key" onclick="pressNum(2)">2</button>
+            <button class="key" onclick="pressNum(3)">3</button>
+
+            <button class="key" onclick="backspace()">⌫</button>
+            <button class="key" onclick="pressNum(0)">0</button>
+            <button class="key" onclick="checkAnswer(false)">✔</button>
+        </div>
+
+        <button class="key next-key" onclick="nextQuestion()">⏭</button>
+    </div>
+</div>
+
+<div id="summary"></div>
+</div>
+
+<audio id="okSound" src="durys.mp3"></audio>
+<audio id="errSound" src="qate.mp3"></audio>
+<audio id="clickSound" src="click1.mp3"></audio>
+
+<script>
+/* ================= AUDIO SYSTEM ================= */
+
+let soundOn = localStorage.getItem("soundOn") !== "false";
+
+const okSound    = document.getElementById("okSound");
+const errSound   = document.getElementById("errSound");
+const clickSound = document.getElementById("clickSound");
+
+const sounds = [okSound, errSound, clickSound];
+let audioUnlocked = false;
+
+// 🔓 Brauzer blokini ochish
+function unlockAudio(){
+    if(audioUnlocked) return;
+
+    sounds.forEach(a=>{
+        a.volume = 0.9;
+        a.muted = false;
+        a.play().then(()=>{
+            a.pause();
+            a.currentTime = 0;
+        }).catch(()=>{});
+    });
+
+    audioUnlocked = true;
+}
+
+// 🔊 Ovoz ijro etish (universal)
+function playSound(audio){
+    if(!soundOn || !audioUnlocked) return;
+
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+}
+
+/* ================= TOGGLE BUTTON ================= */
+
+function toggleSound(){
+    soundOn = !soundOn;
+    localStorage.setItem("soundOn", soundOn);
+    document.getElementById("soundBtn").textContent =
+        soundOn ? "🔊 Дыбыс: ON" : "🔇 Дыбыс: OFF";
+}
+// 🔄 Sahifa yuklanganda ovoz tugmasini to‘g‘ri holatda ko‘rsatish
+window.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("soundBtn");
+    btn.textContent = soundOn ? "🔊 Дыбыс: ON" : "🔇 Дыбыс: OFF";
+});
+
+
+/* ================= GAME LOGIC ================= */
+
+let questions=[], wrongList=[];
+let index=0, correct=0, wrong=0, checked=false, timer;
+const maxQuestions=30;
+
+const container = document.querySelector(".container");
+const answer = document.getElementById("answer");
+const question = document.getElementById("question");
+const game = document.getElementById("game");
+const summary = document.getElementById("summary");
+const timerEl = document.getElementById("timer");
+const correctCountEl = document.getElementById("correctCount");
+const wrongCountEl = document.getElementById("wrongCount");
+
+/* ================= START GAME ================= */
+
+function startGame(){
+    unlockAudio(); // 🔊 MUHIM
+
+    document.getElementById("soundBtn").textContent =
+        soundOn ? "🔊 Ovoz: ON" : "🔇 Ovoz: OFF";
+
+    document.getElementById("topbar").style.display = "flex";
+    document.querySelector(".scoreboard").style.display = "block";
+    timerEl.style.display = "block";
+
+    index = correct = wrong = 0;
+    wrongList = [];
+    game.style.display = "block";
+    document.getElementById("startBtn").style.display = "none";
+    correctCountEl.textContent = 0;
+    wrongCountEl.textContent = 0;
+
+    // savollar
+    let pool = [];
+    for(let a=2;a<=9;a++){
+        for(let b=1;b<=10;b++){
+            pool.push({a,b,ans:a*b});
+        }
+    }
+    pool.sort(()=>Math.random()-0.5);
+    questions = pool.slice(0, maxQuestions);
+
+    showQuestion();
+}
+
+/* ================= QUESTIONS ================= */
+
+function showQuestion(){
+    if(index >= maxQuestions) return finish();
+
+    checked = false;
+    const q = questions[index];
+    question.textContent = `${q.a} × ${q.b} = ?`;
+    answer.value = "";
+    startTimer();
+    answer.focus();
+}
+
+function startTimer(){
+    let t = 5;
+    timerEl.textContent = t;
+    clearInterval(timer);
+
+    timer = setInterval(()=>{
+        t--;
+        timerEl.textContent = t;
+        if(t <= 0){
+            clearInterval(timer);
+            checkAnswer(true);
+        }
+    },1000);
+}
+
+/* ================= CHECK ANSWER ================= */
+
+function checkAnswer(timeOver){
+    if(checked) return;
+    checked = true;
+    clearInterval(timer);
+
+    const q = questions[index];
+    const val = parseInt(answer.value);
+
+    if(timeOver || val !== q.ans){
+        wrong++;
+        wrongCountEl.textContent = wrong;
+        wrongList.push(
+            `${q.a} × ${q.b} = ${q.ans} (<span class="wrong-user">${isNaN(val)?"−":val}</span>)`
+        );
+
+        container.classList.add("wrong-flash");
+        setTimeout(()=>container.classList.remove("wrong-flash"),300);
+
+        playSound(errSound); // ❌
+    } else {
+        correct++;
+        correctCountEl.textContent = correct;
+
+        container.classList.add("correct-flash");
+        setTimeout(()=>container.classList.remove("correct-flash"),300);
+
+        playSound(okSound); // ✅
+    }
+
+    index++;
+}
+
+/* ================= CONTROLS ================= */
+
+function nextQuestion(){
+    if(!checked) checkAnswer(false);
+    showQuestion();
+}
+
+function pressNum(n){
+    if(checked) return;
+    answer.value += n;
+    playSound(clickSound);
+    answer.focus();
+}
+
+function backspace(){
+    answer.value = answer.value.slice(0,-1);
+    playSound(clickSound);
+    answer.focus();
+}
+
+/* ================= KEYBOARD ================= */
+
+answer.addEventListener("keydown", e=>{
+    if(e.key === "Enter"){
+        e.preventDefault();
+        checkAnswer(false);
+    }
+});
+
+document.addEventListener("keydown", e=>{
+    if(e.code === "Space" && game.style.display !== "none"){
+        e.preventDefault();
+        nextQuestion();
+    }
+});
+
+/* ================= FINISH ================= */
+
+function finish(){
+    game.style.display = "none";
+    document.getElementById("topbar").style.display = "none";
+
+    const sb = document.querySelector(".scoreboard");
+    sb.style.position = "static";
+    sb.style.textAlign = "center";
+    sb.style.margin = "15px 0";
+
+    let grade = Math.min(5,(correct/maxQuestions*5)).toFixed(2);
+
+    let html = `
+        <b>Тест аяқталды!</b><br><br>
+        <div>Баға: ${grade}</div>
+    `;
+
+    if(wrongList.length){
+        html += `
+            <div class="wrong-list">
+                <b>Қате мысалдар:</b><br>
+                ${wrongList.join("<br>")}
+            </div>
+        `;
+    }
+
+    html += `
+        <div style="margin-top:20px;">
+            <button onclick="location.reload()">↺ Қайта бастау</button>
+        </div>
+    `;
+
+    summary.innerHTML = html;
+    summary.prepend(sb);
+}
+</script>
+</body>
+</html>
