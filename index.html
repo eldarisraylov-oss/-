@@ -12,7 +12,7 @@ body{
     display:flex;
     justify-content:center;
     align-items:center;
-    min-height:100vh;
+    height:100vh;
     margin:0;
 }
 
@@ -31,8 +31,15 @@ body{
     position:absolute;
     right:20px;
     top:20px;
-    display:none;
+    text-align:right;
 }
+.scoreboard {
+    display: none;
+}
+#timer{
+    display: none;
+}
+
 .score{
     font-size:18px;
     font-weight:bold;
@@ -59,7 +66,7 @@ button{
 button:hover{background:#3452d1}
 
 #startBtn{
-    margin-top:12px;
+    margin-top: 12px;   /* 🔹 tugmalar orasini ochadi */
 }
 
 #question{
@@ -68,20 +75,14 @@ button:hover{background:#3452d1}
     margin:20px 0;
 }
 
-/* 🔒 INPUT — FAOL EMAS, FAQAT KO‘RINADI */
-#answer{
+input{
     font-size:26px;
     padding:10px;
     width:200px;
     text-align:center;
-    caret-color:transparent;
-    user-select:none;
-    background:#f0f2f7;
 }
 
-/* === TIMER === */
 #timer{
-    display:none;
     font-size:22px;
     color:red;
     font-weight:bold;
@@ -91,8 +92,10 @@ button:hover{background:#3452d1}
 .numpad-wrap{
     display:flex;
     justify-content:center;
+    align-items:flex-end;
     gap:16px;
     margin:20px 0;
+    transform:translateX(50px);
 }
 
 .numpad{
@@ -106,6 +109,7 @@ button:hover{background:#3452d1}
     height:80px;
     font-size:28px;
     font-weight:bold;
+    color:#333;                    /* 🔑 MUHIM */
     border-radius:16px;
     border:1.5px solid rgba(0,0,0,.35);
     background:linear-gradient(145deg,#ffffff,#d9dce3);
@@ -113,6 +117,7 @@ button:hover{background:#3452d1}
                -6px -6px 12px #ffffff;
     cursor:pointer;
 }
+
 .key:active{
     box-shadow:inset 4px 4px 8px #c5c8ce,
                inset -4px -4px 8px #ffffff;
@@ -124,33 +129,88 @@ button:hover{background:#3452d1}
     height:80px;
 }
 
-/* === MOBILE === */
-@media (max-width:480px){
-    body{
-        align-items:flex-start;
-    }
+.wrong-list{
+    margin:20px auto 0;   /* 🔑 markazga keltiradi */
+    text-align:center;      /* misollar chapdan o‘qiladi */
+    font-size:18px;
+    max-width:320px;      /* 🔑 chiroyli eni */
+}
+.wrong-user{
+    color:red;
+    font-weight:bold;
+}
+/* === MOBILE ADAPTATION === */
+@media (max-width: 480px){
+
     .container{
-        margin:10px;
         padding:20px;
     }
-    #question{font-size:28px;}
-    #answer{width:160px;font-size:22px;}
+
+    #question{
+        font-size:28px;
+    }
+
+    input{
+        width:160px;
+        font-size:22px;
+    }
 
     .numpad-wrap{
-        flex-direction:column;
-        gap:12px;
+        transform:none;
+        gap:10px;
+        justify-content:center;
+        align-items:center;
+        width:100%;
     }
+
     .numpad{
         grid-template-columns:repeat(3,60px);
         gap:8px;
     }
-    .key,.next-key{
+
+    .key{
         width:60px;
         height:50px;
         font-size:20px;
         border-radius:10px;
     }
+
+    .next-key{
+        width:60px;
+        height:50px;
+    }
 }
+
+/* === FEEDBACK EFFECT === */
+.correct-flash{
+    animation: correctFlash 0.6s ease-in-out;
+}
+.wrong-flash{
+    animation: wrongFlash 0.6s ease-in-out;
+}
+
+@keyframes correctFlash{
+    from{ background:#e6ffea; }
+    to{ background:#ffffff; }
+}
+
+@keyframes wrongFlash{
+    from{ background:#ffe6e6; }
+    to{ background:#ffffff; }
+}
+
+@media (max-width: 480px){
+    .scoreboard{
+        position: static;
+        display: flex !important;
+        justify-content: center;
+        gap: 20px;
+        margin: 10px 0;
+        text-align: center;
+    }
+}
+
+
 </style>
 </head>
 
@@ -173,8 +233,7 @@ button:hover{background:#3452d1}
 <div id="game" style="display:none;">
     <div id="question"></div>
 
-    <!-- 🔒 KLAVIATURA CHIQMAYDI -->
-    <input id="answer" placeholder="Жауап" readonly onfocus="this.blur()">
+    <input id="answer" inputmode="numeric" placeholder="Жауап">
 
     <div class="numpad-wrap">
         <div class="numpad">
@@ -207,107 +266,258 @@ button:hover{background:#3452d1}
 <audio id="clickSound" src="click1.mp3"></audio>
 
 <script>
-let soundOn = localStorage.getItem("soundOn") !== "false";
-const okSound = document.getElementById("okSound");
-const errSound = document.getElementById("errSound");
-const clickSound = document.getElementById("clickSound");
-let audioUnlocked=false;
+/* ================= AUDIO SYSTEM ================= */
 
+let soundOn = localStorage.getItem("soundOn") !== "false";
+
+const okSound    = document.getElementById("okSound");
+const errSound   = document.getElementById("errSound");
+const clickSound = document.getElementById("clickSound");
+
+const sounds = [okSound, errSound, clickSound];
+let audioUnlocked = false;
+
+// 🔓 Brauzer blokini ochish
 function unlockAudio(){
     if(audioUnlocked) return;
-    [okSound,errSound,clickSound].forEach(a=>{
-        a.play().then(()=>{a.pause();a.currentTime=0}).catch(()=>{});
+
+    sounds.forEach(a=>{
+        a.volume = 0.9;
+        a.muted = false;
+        a.play().then(()=>{
+            a.pause();
+            a.currentTime = 0;
+        }).catch(()=>{});
     });
-    audioUnlocked=true;
-}
-function playSound(a){
-    if(soundOn && audioUnlocked){
-        a.currentTime=0;
-        a.play().catch(()=>{});
-    }
-}
-function toggleSound(){
-    soundOn=!soundOn;
-    localStorage.setItem("soundOn",soundOn);
-    soundBtn.textContent=soundOn?"🔊 Дыбыс: ON":"🔇 Дыбыс: OFF";
+
+    audioUnlocked = true;
 }
 
-let questions=[],index=0,correct=0,wrong=0,checked=false,timer;
+// 🔊 Ovoz ijro etish (universal)
+function playSound(audio){
+    if(!soundOn || !audioUnlocked) return;
+
+    audio.pause();
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+}
+
+/* ================= TOGGLE BUTTON ================= */
+
+function toggleSound(){
+    soundOn = !soundOn;
+    localStorage.setItem("soundOn", soundOn);
+    document.getElementById("soundBtn").textContent =
+        soundOn ? "🔊 Дыбыс: ON" : "🔇 Дыбыс: OFF";
+}
+// 🔄 Sahifa yuklanganda ovoz tugmasini to‘g‘ri holatda ko‘rsatish
+window.addEventListener("DOMContentLoaded", () => {
+    const btn = document.getElementById("soundBtn");
+    btn.textContent = soundOn ? "🔊 Дыбыс: ON" : "🔇 Дыбыс: OFF";
+});
+
+
+/* ================= GAME LOGIC ================= */
+
+let questions=[], wrongList=[];
+let index=0, correct=0, wrong=0, checked=false, timer;
 const maxQuestions=30;
 
-const answer=document.getElementById("answer");
-const question=document.getElementById("question");
-const game=document.getElementById("game");
-const timerEl=document.getElementById("timer");
+const container = document.querySelector(".container");
+const answer = document.getElementById("answer");
+const question = document.getElementById("question");
+const game = document.getElementById("game");
+const summary = document.getElementById("summary");
+const timerEl = document.getElementById("timer");
+const correctCountEl = document.getElementById("correctCount");
+const wrongCountEl = document.getElementById("wrongCount");
+
+/* ================= START GAME ================= */
 
 function startGame(){
-    unlockAudio();
-    index=correct=wrong=0;
-    questions=[];
+    unlockAudio(); // 🔊 MUHIM
+
+    document.getElementById("soundBtn").textContent =
+        soundOn ? "🔊 Дыбыс: ON" : "🔇 Дыбыс: OFF";
+
+    document.getElementById("topbar").style.display = "flex";
+    document.querySelector(".scoreboard").style.display = "block";
+    timerEl.style.display = "block";
+
+    index = correct = wrong = 0;
+    wrongList = [];
+    game.style.display = "block";
+    document.getElementById("startBtn").style.display = "none";
+    correctCountEl.textContent = 0;
+    wrongCountEl.textContent = 0;
+
+    // savollar
+    let pool = [];
     for(let a=2;a<=9;a++){
         for(let b=1;b<=10;b++){
-            questions.push({a,b,ans:a*b});
+            pool.push({a,b,ans:a*b});
         }
     }
-    questions.sort(()=>Math.random()-0.5);
-    questions=questions.slice(0,maxQuestions);
-    document.getElementById("startBtn").style.display="none";
-    document.querySelector(".scoreboard").style.display="block";
-    timerEl.style.display="block";
-    game.style.display="block";
+    pool.sort(()=>Math.random()-0.5);
+    questions = pool.slice(0, maxQuestions);
+
     showQuestion();
 }
 
+/* ================= QUESTIONS ================= */
+
 function showQuestion(){
-    if(index>=maxQuestions) return;
-    checked=false;
-    const q=questions[index];
-    question.textContent=`${q.a} × ${q.b} = ?`;
-    answer.value="";
+    if(index >= maxQuestions) return finish();
+
+    checked = false;
+    const q = questions[index];
+    question.textContent = `${q.a} × ${q.b} = ?`;
+    answer.value = "";
     startTimer();
+    answer.focus();
 }
 
 function startTimer(){
-    let t=5;
-    timerEl.textContent=t;
+    let t = 5;
+    timerEl.textContent = t;
     clearInterval(timer);
-    timer=setInterval(()=>{
+
+    timer = setInterval(()=>{
         t--;
-        timerEl.textContent=t;
-        if(t<=0){
+        timerEl.textContent = t;
+        if(t <= 0){
             clearInterval(timer);
-            checkAnswer(true);
+            checkAnswer(false);
         }
     },1000);
 }
 
+/* ================= CHECK ANSWER ================= */
+
 function checkAnswer(timeOver){
     if(checked) return;
-    checked=true;
+    checked = true;
     clearInterval(timer);
-    const q=questions[index];
-    if(parseInt(answer.value)!==q.ans){
+
+    const q = questions[index];
+    const val = parseInt(answer.value);
+
+    // ❌ noto‘g‘ri yoki vaqt tugadi
+    if(timeOver || val !== q.ans){
+        wrong++;
+        wrongCountEl.textContent = wrong;
+
+        // 🔴 SAVOL JOYIGA TO‘G‘RI JAVOBNI YOZAMIZ
+        question.textContent = `${q.a} × ${q.b} = ${q.ans}`;
+
+        wrongList.push(
+            `${q.a} × ${q.b} = ${q.ans} (<span class="wrong-user">${isNaN(val)?"−":val}</span>)`
+        );
+
+        container.classList.add("wrong-flash");
+        setTimeout(()=>container.classList.remove("wrong-flash"),300);
+
         playSound(errSound);
-    }else{
+    }
+    // ✅ to‘g‘ri
+    else{
+        correct++;
+        correctCountEl.textContent = correct;
+
+        // 🔵 SAVOL JOYIGA JAVOBNI YOZAMIZ
+        question.textContent = `${q.a} × ${q.b} = ${q.ans}`;
+
+        container.classList.add("correct-flash");
+        setTimeout(()=>container.classList.remove("correct-flash"),300);
+
         playSound(okSound);
     }
-    question.textContent=`${q.a} × ${q.b} = ${q.ans}`;
+
     index++;
 }
 
-function pressNum(n){
-    if(!checked){
-        answer.value+=n;
-        playSound(clickSound);
-    }
-}
-function backspace(){
-    answer.value=answer.value.slice(0,-1);
-    playSound(clickSound);
-}
+/* ================= CONTROLS ================= */
+
 function nextQuestion(){
     if(!checked) checkAnswer(false);
     showQuestion();
+}
+
+function pressNum(n){
+    if(checked) return;
+    answer.value += n;
+    playSound(clickSound);
+    answer.focus();
+}
+
+function backspace(){
+    answer.value = answer.value.slice(0,-1);
+    playSound(clickSound);
+    answer.focus();
+}
+
+/* ================= KEYBOARD ================= */
+
+answer.addEventListener("keydown", e => {
+
+    // ✅ ENTER — tekshirish (ovoz yo‘q)
+    if(e.key === "Enter"){
+        e.preventDefault();
+        checkAnswer(false);
+        return;
+    }
+
+    // ✅ FAQAT 0–9 bosilganda click ovozi
+    if(e.key >= "0" && e.key <= "9"){
+        if(!checked){
+            playSound(clickSound);
+        }
+    }
+});
+
+
+document.addEventListener("keydown", e=>{
+    if(e.code === "Space" && game.style.display !== "none"){
+        e.preventDefault();
+        nextQuestion();
+    }
+});
+
+/* ================= FINISH ================= */
+
+function finish(){
+    game.style.display = "none";
+    document.getElementById("topbar").style.display = "none";
+
+    const sb = document.querySelector(".scoreboard");
+    sb.style.position = "static";
+    sb.style.textAlign = "center";
+    sb.style.margin = "15px 0";
+
+    let grade = Math.min(5,(correct/maxQuestions*5)).toFixed(2);
+
+    let html = `
+        <b>Тест аяқталды!</b><br><br>
+        <div>Баға: ${grade}</div>
+    `;
+
+    if(wrongList.length){
+        html += `
+            <div class="wrong-list">
+                <b>Қате мысалдар:</b><br>
+                ${wrongList.join("<br>")}
+            </div>
+        `;
+    }
+
+    html += `
+        <div style="margin-top:20px;">
+            <button onclick="location.reload()">↺ Қайта бастау</button>
+        </div>
+    `;
+
+    summary.innerHTML = html;
+    summary.prepend(sb);
 }
 </script>
 </body>
