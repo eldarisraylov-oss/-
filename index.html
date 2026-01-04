@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="kk">
 <head>
 <meta charset="UTF-8">
@@ -210,6 +210,12 @@ input{
     }
 }
 
+input{
+    caret-color: transparent; /* kursor ko‘rinmaydi */
+    pointer-events: none;     /* bosib bo‘lmaydi */
+}
+
+
 
 </style>
 </head>
@@ -338,7 +344,7 @@ function startGame(){
     unlockAudio(); // 🔊 MUHIM
 
     document.getElementById("soundBtn").textContent =
-        soundOn ? "🔊 Дыбыс: ON" : "🔇 Дыбыс: OFF";
+        soundOn ? "🔊 Ovoz: ON" : "🔇 Ovoz: OFF";
 
     document.getElementById("topbar").style.display = "flex";
     document.querySelector(".scoreboard").style.display = "block";
@@ -374,7 +380,7 @@ function showQuestion(){
     question.textContent = `${q.a} × ${q.b} = ?`;
     answer.value = "";
     startTimer();
-    answer.focus();
+    answer.blur();
 }
 
 function startTimer(){
@@ -447,13 +453,13 @@ function pressNum(n){
     if(checked) return;
     answer.value += n;
     playSound(clickSound);
-    answer.focus();
+    answer.blur();
 }
 
 function backspace(){
     answer.value = answer.value.slice(0,-1);
     playSound(clickSound);
-    answer.focus();
+    answer.blur();
 }
 
 /* ================= KEYBOARD ================= */
@@ -521,4 +527,4 @@ function finish(){
 }
 </script>
 </body>
-</html>
+</html> 
