@@ -156,10 +156,10 @@ input{
     }
 
     .numpad-wrap{
-        transform:none;
+        transform:translate(30px);
         gap:10px;
         justify-content:center;
-        align-items:center;
+        align-items:flex-end;
         width:100%;
     }
 
@@ -202,8 +202,9 @@ input{
 @media (max-width: 480px){
     .scoreboard{
         position: static;
-        display: flex !important;
+        flex-direction: row;  
         justify-content: center;
+        align-items: center;
         gap: 20px;
         margin: 10px 0;
         text-align: center;
@@ -212,7 +213,6 @@ input{
 
 input{
     caret-color: transparent; /* kursor ko‘rinmaydi */
-    pointer-events: none;     /* bosib bo‘lmaydi */
 }
 
 
@@ -347,7 +347,18 @@ function startGame(){
         soundOn ? "🔊 Ovoz: ON" : "🔇 Ovoz: OFF";
 
     document.getElementById("topbar").style.display = "flex";
-    document.querySelector(".scoreboard").style.display = "block";
+    const sb = document.querySelector(".scoreboard");
+
+if (window.innerWidth <= 480) {
+    sb.style.display = "flex";
+    sb.style.flexDirection = "row";
+    sb.style.justifyContent = "center";
+    sb.style.alignItems = "center";
+    sb.style.gap = "18px";
+} else {
+    sb.style.display = "block";
+}
+
     timerEl.style.display = "block";
 
     index = correct = wrong = 0;
@@ -380,7 +391,7 @@ function showQuestion(){
     question.textContent = `${q.a} × ${q.b} = ?`;
     answer.value = "";
     startTimer();
-    answer.blur();
+    answer.focus();
 }
 
 function startTimer(){
@@ -495,10 +506,6 @@ function finish(){
     game.style.display = "none";
     document.getElementById("topbar").style.display = "none";
 
-    const sb = document.querySelector(".scoreboard");
-    sb.style.position = "static";
-    sb.style.textAlign = "center";
-    sb.style.margin = "15px 0";
 
     let grade = Math.min(5,(correct/maxQuestions*5)).toFixed(2);
 
@@ -523,7 +530,7 @@ function finish(){
     `;
 
     summary.innerHTML = html;
-    summary.prepend(sb);
+
 }
 </script>
 </body>
