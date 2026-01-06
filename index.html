@@ -82,6 +82,11 @@ input{
     text-align:center;
 }
 
+.mobile-answer{
+    display:none;
+}
+
+
 #timer{
     font-size:22px;
     color:red;
@@ -200,6 +205,7 @@ input{
 }
 
 @media (max-width: 480px){
+
     .scoreboard{
         position: static;
         flex-direction: row;  
@@ -208,6 +214,24 @@ input{
         gap: 20px;
         margin: 10px 0;
         text-align: center;
+    }
+
+    #answer{
+        display:none;
+    }
+
+    .mobile-answer{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        height:50px;
+        width:160px;
+        margin:10px auto;
+        font-size:26px;
+        font-weight:bold;
+        border:2px solid #4a6cf7;
+        border-radius:12px;
+        background:#f4f6fb;
     }
 }
 
@@ -240,6 +264,8 @@ input{
     <div id="question"></div>
 
     <input id="answer" inputmode="numeric" placeholder="Жауап">
+    <div id="mobileAnswer" class="mobile-answer"></div>
+
 
     <div class="numpad-wrap">
         <div class="numpad">
@@ -275,6 +301,7 @@ input{
 /* ================= AUDIO SYSTEM ================= */
 
 let soundOn = localStorage.getItem("soundOn") !== "false";
+let mobileValue = "";
 
 const okSound    = document.getElementById("okSound");
 const errSound   = document.getElementById("errSound");
@@ -391,7 +418,9 @@ function showQuestion(){
     question.textContent = `${q.a} × ${q.b} = ?`;
     answer.value = "";
     startTimer();
-    answer.focus();
+    mobileValue = "";
+    document.getElementById("mobileAnswer").textContent = "";
+
 }
 
 function startTimer(){
@@ -417,7 +446,9 @@ function checkAnswer(timeOver){
     clearInterval(timer);
 
     const q = questions[index];
-    const val = parseInt(answer.value);
+    const val = isMobile()
+    ? parseInt(mobileValue)
+    : parseInt(answer.value);
 
     // ❌ noto‘g‘ri yoki vaqt tugadi
     if(timeOver || val !== q.ans){
@@ -462,16 +493,35 @@ function nextQuestion(){
 
 function pressNum(n){
     if(checked) return;
-    answer.value += n;
+
+    if(isMobile()){
+        mobileValue += n;
+        document.getElementById("mobileAnswer").textContent = mobileValue;
+    }else{
+        answer.value += n;
+    }
+
     playSound(clickSound);
-    answer.blur();
 }
 
-function backspace(){
-    answer.value = answer.value.slice(0,-1);
-    playSound(clickSound);
-    answer.blur();
+
+function isMobile(){
+    return window.innerWidth <= 480;
 }
+
+
+function backspace(){
+
+    if(isMobile()){
+        mobileValue = mobileValue.slice(0,-1);
+        document.getElementById("mobileAnswer").textContent = mobileValue;
+    }else{
+        answer.value = answer.value.slice(0,-1);
+    }
+
+    playSound(clickSound);
+}
+
 
 /* ================= KEYBOARD ================= */
 
