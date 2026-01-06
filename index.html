@@ -235,6 +235,13 @@ input{
     }
 }
 
+@media (min-width: 481px){
+    input{
+        caret-color: auto;
+    }
+}
+
+
 input{
     caret-color: transparent; /* kursor ko‘rinmaydi */
 }
@@ -541,6 +548,31 @@ answer.addEventListener("keydown", e => {
         }
     }
 });
+
+document.addEventListener("keydown", e => {
+
+    if(game.style.display === "none") return;
+    if(checked) return;
+
+    // 🔢 NUMPAD va yuqori raqamlar
+    if((e.key >= "0" && e.key <= "9")){
+        pressNum(e.key);
+        e.preventDefault();
+    }
+
+    // ⌫ BACKSPACE
+    if(e.key === "Backspace"){
+        backspace();
+        e.preventDefault();
+    }
+
+    // ⏎ ENTER — javobni tekshirish
+    if(e.key === "Enter"){
+        checkAnswer(false);
+        e.preventDefault();
+    }
+});
+
 
 
 document.addEventListener("keydown", e=>{
